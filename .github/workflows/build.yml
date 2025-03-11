@@ -33,9 +33,16 @@ jobs:
             ~/.konan/caches
             ~/.konan/dependencies
             ~/.konan/kotlin-native-prebuilt-*
+            /root/.konan/caches
+            /root/.konan/dependencies
+            /root/.konan/kotlin-native-prebuilt-*
           key: ${{ runner.os }}-konan
           restore-keys: |
             ${{ runner.os }}-konan
+      - name: Check Kotlin/Native Dependencies
+        run: |
+          kotlinc-native .github/dependencies.kt
+          rm -rf program.kexe
       - name: Configure Project
         run: cmake .
       - name: Build Project (Posix)
