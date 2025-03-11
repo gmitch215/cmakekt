@@ -27,6 +27,8 @@ jobs:
         with:
           version: '2.1.10'
           install-native: true
+      - name: Configure Project
+        run: cmake .
       - name: Build Project
         run: sudo cmake --build . --target install package
       - name: Inspect klib Contents
