@@ -28,8 +28,12 @@ jobs:
           install-native: true
       - name: Configure Project
         run: cmake .
-      - name: Build Project
+      - name: Build Project (Posix)
+        if: ${{ matrix.os != 'windows-2022' }}
         run: sudo cmake --build . --target install package
+      - name: Build Project (Windows)
+        if: ${{ matrix.os == 'windows-2022' }}
+        run: cmake --build . --target install package
       - name: Inspect klib Contents
         run: |
           cd test/build/cinterop
