@@ -40,9 +40,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-konan
       - name: Check Kotlin/Native Dependencies
-        run: |
-          kotlinc-native .github/dependencies.kt
-          rm -rf program.kexe
+        run: kotlinc-native .github/dependencies.kt
       - name: Configure Project
         run: cmake .
       - name: Build Project (Posix)
