@@ -122,6 +122,16 @@ if (NOT DEFINED KN_CINTEROP_FILE_OUTPUT)
     set(KN_CINTEROP_FILE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/build/cinterop/${PROJECT_NAME}.klib")
 endif()
 
+## KN_INSTALL_GROUPID
+if (NOT DEFINED KN_INSTALL_GROUPID)
+    set(KN_INSTALL_GROUPID "${KN_DEFINITION_PACKAGE}")
+endif()
+
+## KN_INSTALL_ARTIFACTID
+if (NOT DEFINED KN_INSTALL_ARTIFACTID)
+    set(KN_INSTALL_ARTIFACTID "${PROJECT_NAME}")
+endif()
+
 # Targets
 
 ## cinterop
@@ -199,6 +209,61 @@ add_custom_target(
         -o ${KN_CINTEROP_FILE_OUTPUT} 
         ${KN_CINTEROP_EXTRA_OPTS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    BYPRODUCTS ${KN_DEFINITION_FILE_OUTPUT} ${KN_CINTEROP_FILE_OUTPUT}
     COMMENT "Generating Kotlin/Native bindings"
     VERBATIM
 )
+
+# install (maven local)
+if (DEFINED ENV{M2_HOME})
+    set(MAVEN_LOCAL "$ENV{M2_HOME}/repository")
+else()
+    set(MAVEN_LOCAL "$ENV{HOME}/.m2/repository")
+endif()
+
+if (NOT EXISTS "${MAVEN_LOCAL}")
+    file(MAKE_DIRECTORY "${MAVEN_LOCAL}")
+endif()
+
+if (DEFINED ENV{MAVEN_HOME})
+    set(MAVEN_COMMAND "$ENV{MAVEN_HOME}/bin/mvn")
+else()
+    set(MAVEN_COMMAND "mvn")
+endif()
+
+add_custom_target(
+    "install-maven-local"
+    COMMAND ${MAVEN_COMMAND} install:install-file 
+        -Dfile=${KN_CINTEROP_FILE_OUTPUT} 
+        -Ddescription=${PROJECT_DESCRIPTION}
+        -DgroupId=${KN_INSTALL_GROUPID} 
+        -DartifactId=${KN_INSTALL_ARTIFACTID} 
+        -Dversion=${PROJECT_VERSION} 
+        -Dpackaging=klib 
+        -DlocalRepositoryPath=${MAVEN_LOCAL}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS klib
+    COMMENT "Installing Kotlin/Native bindings to Maven Local"
+    VERBATIM
+)
+install(CODE "
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target install-maven-local)
+")
+
+# deploy (maven remote)
+if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
+    add_custom_target(
+        deploy-maven
+        COMMAND ${MAVEN_COMMAND} deploy:deploy-file 
+            -Durl=${MAVEN_REMOTE_URL}
+            -DrepositoryId=${MAVEN_REMOTE_ID}
+            -DgroupId=${KN_INSTALL_GROUPID} 
+            -DartifactId=${KN_INSTALL_ARTIFACTID} 
+            -Dversion=${PROJECT_VERSION} 
+            -Dpackaging=klib 
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS klib
+        COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
+        VERBATIM
+    )
+endif()
