@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: fwilhe2/setup-kotlin@main
         with:
-          kotlin-version: '2.1.10'
+          version: '2.1.10'
           install-native: true
       - name: Build Project
         run: sudo cmake --build . --target install package
