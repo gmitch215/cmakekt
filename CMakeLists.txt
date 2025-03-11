@@ -8,7 +8,7 @@ project(CMakeKt
 )
 
 # Testing
-add_subdirectory(test EXCLUDE_FROM_ALL)
+add_subdirectory(test)
 enable_testing()
 
 # Installation
