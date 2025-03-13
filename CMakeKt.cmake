@@ -31,7 +31,7 @@ set(KN_CURRENT_TARGET "${KN_CURRENT_OS}_${KN_CURRENT_ARCHITECTURE}")
 ## KN_DEFINITION_HEADERS
 if (NOT DEFINED KN_DEFINITION_HEADERS)
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include")
-        file(GLOB_RECURSE KN_DEFINITION_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include" "include/*.h")
+        file(GLOB_RECURSE KN_DEFINITION_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
         string(REPLACE ";" " " KN_DEFINITION_HEADERS "${KN_DEFINITION_HEADERS}")
     else()
         set(KN_DEFINITION_HEADERS "")
@@ -99,6 +99,19 @@ if (NOT DEFINED KN_DEFINITION_LIBRARIES)
         "${CMAKE_CURRENT_BINARY_DIR}/*.dll"
         "${CMAKE_CURRENT_BINARY_DIR}/*.lib"
     )
+
+    if (DEFINED RUNTIME_OUTPUT_DIRECTORY)
+        file(GLOB KN_DEFINITION_LIBRARIES_ROD RELATIVE "${RUNTIME_OUTPUT_DIRECTORY}"
+            "${RUNTIME_OUTPUT_DIRECTORY}/*.a" 
+            "${RUNTIME_OUTPUT_DIRECTORY}/*.dylib" 
+            "${RUNTIME_OUTPUT_DIRECTORY}/*.so" 
+            "${RUNTIME_OUTPUT_DIRECTORY}/*.dll"
+            "${RUNTIME_OUTPUT_DIRECTORY}/*.lib"
+        )
+
+        list(APPEND KN_DEFINITION_LIBRARIES ${KN_DEFINITION_LIBRARIES_ROD})
+    endif()
+
     string(REPLACE ";" " " KN_DEFINITION_LIBRARIES "${KN_DEFINITION_LIBRARIES}")
 endif()
 
@@ -241,6 +254,7 @@ add_custom_target(
         -Dversion=${PROJECT_VERSION} 
         -Dpackaging=klib 
         -DlocalRepositoryPath=${MAVEN_LOCAL}
+        -DcreateChecksum=true
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS klib
     COMMENT "Installing Kotlin/Native bindings to Maven Local"
@@ -261,6 +275,7 @@ if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
             -DartifactId=${KN_INSTALL_ARTIFACTID} 
             -Dversion=${PROJECT_VERSION} 
             -Dpackaging=klib 
+            -DcreateChecksum=true
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS klib
         COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
