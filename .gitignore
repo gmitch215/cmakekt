@@ -19,3 +19,4 @@ install_manifest.txt
 *.exe
 *.klib
 *.def
+*.kexe
