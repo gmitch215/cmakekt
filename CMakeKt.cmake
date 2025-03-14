@@ -245,24 +245,26 @@ else()
 endif()
 
 add_custom_target(
-    "install-maven-local"
-    COMMAND ${MAVEN_COMMAND} install:install-file 
-        -Dfile=${KN_CINTEROP_FILE_OUTPUT} 
-        -Ddescription=${PROJECT_DESCRIPTION}
-        -DgroupId=${KN_INSTALL_GROUPID} 
-        -DartifactId=${KN_INSTALL_ARTIFACTID} 
-        -Dversion=${PROJECT_VERSION} 
-        -Dpackaging=klib 
-        -DlocalRepositoryPath=${MAVEN_LOCAL}
-        -DcreateChecksum=true
+    create-checksums
+    COMMAND bash -c "sha256sum ${KN_CINTEROP_FILE_OUTPUT} | awk '{print $1}' > ${KN_CINTEROP_FILE_OUTPUT}.sha256"
+    COMMAND bash -c "sha512sum ${KN_CINTEROP_FILE_OUTPUT} | awk '{print $1}' > ${KN_CINTEROP_FILE_OUTPUT}.sha512"
+    COMMAND bash -c "sha1sum ${KN_CINTEROP_FILE_OUTPUT}| awk '{print $1}' > ${KN_CINTEROP_FILE_OUTPUT}.sha1"
+    COMMAND bash -c "md5sum ${KN_CINTEROP_FILE_OUTPUT} | awk '{print $1}' > ${KN_CINTEROP_FILE_OUTPUT}.md5"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS klib
-    COMMENT "Installing Kotlin/Native bindings to Maven Local"
+    COMMENT "Creating checksums on '${KN_CINTEROP_FILE_OUTPUT}'"
     VERBATIM
 )
-install(CODE "
-    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target install-maven-local)
-")
+if (NOT DEFINED CMAKE_INSTALL_COMPONENT)
+    install(CODE "
+        execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target create-checksums)
+    ")
+endif()
+
+set(KN_MAVEN_INSTALL_PATH "${MAVEN_LOCAL}/${KN_INSTALL_GROUPID}/${KN_INSTALL_ARTIFACTID}/${PROJECT_VERSION}")
+foreach (CHECKSUM_EXTENSION IN ITEMS ".sha256" ".sha512" ".sha1" ".md5")
+    install(FILES "${KN_CINTEROP_FILE_OUTPUT}${CHECKSUM_EXTENSION}" DESTINATION "${KN_MAVEN_INSTALL_PATH}")
+endforeach()
+install(FILES "${KN_CINTEROP_FILE_OUTPUT}" DESTINATION "${KN_MAVEN_INSTALL_PATH}")
 
 # deploy (maven remote)
 if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
