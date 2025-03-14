@@ -20,3 +20,4 @@ install_manifest.txt
 *.klib*
 *.def
 *.kexe
+pom.xml

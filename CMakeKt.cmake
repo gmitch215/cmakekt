@@ -266,6 +266,20 @@ foreach (CHECKSUM_EXTENSION IN ITEMS ".sha256" ".sha512" ".sha1" ".md5")
 endforeach()
 install(FILES "${KN_CINTEROP_FILE_OUTPUT}" DESTINATION "${KN_MAVEN_INSTALL_PATH}")
 
+set(KN_MAVEN_POM_FILE_CONTENT "<project xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>${KN_INSTALL_GROUPID}</groupId>
+    <artifactId>${KN_INSTALL_ARTIFACTID}</artifactId>
+    <version>${PROJECT_VERSION}</version>
+    <packaging>klib</packaging>
+    <name>${PROJECT_NAME}</name>
+    <description>${PROJECT_DESCRIPTION}</description>
+    <url>${PROJECT_HOMEPAGE_URL}</url>
+</project>")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/pom.xml" "${KN_MAVEN_POM_FILE_CONTENT}")
+set(KN_MAVEN_POM_FILE "${KN_MAVEN_INSTALL_PATH}/${KN_INSTALL_ARTIFACTID}-${PROJECT_VERSION}.pom")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pom.xml" DESTINATION "${KN_MAVEN_INSTALL_PATH}" RENAME "${KN_INSTALL_ARTIFACTID}-${PROJECT_VERSION}.pom")
+
 # deploy (maven remote)
 if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
     add_custom_target(
@@ -279,7 +293,7 @@ if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
             -Dpackaging=klib 
             -DcreateChecksum=true
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS klib
+        DEPENDS klib create-checksums generate-maven-pom
         COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
         VERBATIM
     )
