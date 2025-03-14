@@ -17,6 +17,6 @@ install_manifest.txt
 *.dylib
 *.dll
 *.exe
-*.klib
+*.klib*
 *.def
 *.kexe
