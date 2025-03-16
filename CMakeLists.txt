@@ -14,24 +14,20 @@ enable_testing()
 # Installation
 if(WIN32)
     if(CMAKE_SIZEOF_VOID_P MATCHES "8")
-        set(CMAKE_INSTALL_PREFIX "C:/Program Files/${CMAKE_PROJECT_NAME}")
+        set(CMAKE_INSTALL_DESTINATION "C:/Program Files/${CMAKE_PROJECT_NAME}")
     else()
-        set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/${CMAKE_PROJECT_NAME}")
+        set(CMAKE_INSTALL_DESTINATION "C:/Program Files (x86)/${CMAKE_PROJECT_NAME}")
     endif()
 elseif(APPLE)
-    set(CMAKE_INSTALL_PREFIX "/usr/local")
+    set(CMAKE_INSTALL_DESTINATION "/usr/local")
 else()
-    set(CMAKE_INSTALL_PREFIX "/usr")
+    set(CMAKE_INSTALL_DESTINATION "/usr")
 endif()
 
 option(INSTALL_CMAKEKT "Install CMakeKt" ON)
 
 if (INSTALL_CMAKEKT)
-    include(GNUInstallDirs)
-    install(
-        FILES CMakeKt.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CMakeKt
-    )
+    install(FILES CMakeKt.cmake DESTINATION ${CMAKE_INSTALL_DESTINATION})
 endif()
 
 # Packaging
