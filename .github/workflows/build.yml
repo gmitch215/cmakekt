@@ -58,6 +58,5 @@ jobs:
       - name: Inspect klib Contents
         run: |
           cd test/build/cinterop
-          ls -la
           klib info CMakeKt.klib
           klib dump-metadata CMakeKt.klib -print-signatures true
