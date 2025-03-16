@@ -42,7 +42,7 @@ jobs:
       - name: Check Kotlin/Native Dependencies
         run: kotlinc-native .github/dependencies.kt
       - name: Configure Project
-        run: cmake . -DKN_CINTEROP_FILE_NAME=CMakeKt.klib
+        run: cmake . -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
       - name: Build Project (Posix)
         if: ${{ matrix.os != 'windows-2022' }}
         run: |
