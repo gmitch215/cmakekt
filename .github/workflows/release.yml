@@ -28,7 +28,7 @@ jobs:
         id: latest_tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
       - name: Configure Project
-        run: sudo cmake .
+        run: cmake . -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
       - name: Create Release Artifacts
         run: |
           sudo cmake --build . --target package
