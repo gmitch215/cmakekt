@@ -4,7 +4,9 @@ if (NOT DEFINED PROJECT_NAME)
 endif()
 
 # Normalize install Paths
-cmake_policy(SET CMP0177 NEW)
+if (CMAKE_MINOR_VERSION GREATER_EQUAL 31)
+    cmake_policy(SET CMP0177 NEW)
+endif()
 
 # Define Variables
 
