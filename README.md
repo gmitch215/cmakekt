@@ -21,18 +21,6 @@ sudo cmake --build . --target install
 cp CMakeKt.cmake /path/to/your/project
 ```
 
-- Download an archive of the repository from the [releases page](https://github.com/gmitch215/cmakekt), extract it, and include the `CMakeKt.cmake` file in your project.
-
-```bash
-wget -O cmakekt.zip <url>
-
-unzip cmakekt.zip
-cd cmakekt
-
-# Copy the CMakeKt.cmake file to your project
-cp CMakeKt.cmake /path/to/your/project
-```
-
 - Copy the contents of the `CMakeKt.cmake` file and paste it into your project.
 
 ## Getting Started

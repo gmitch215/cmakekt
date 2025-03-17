@@ -27,20 +27,5 @@ endif()
 option(INSTALL_CMAKEKT "Install CMakeKt" ON)
 
 if (INSTALL_CMAKEKT)
-    install(FILES CMakeKt.cmake DESTINATION ${CMAKE_INSTALL_DESTINATION})
-endif()
-
-# Packaging
-option(PACKAGE_CMDFX "Package ${PROJECT_NAME}" ON)
-
-if (PACKAGE_CMDFX)
-    set(CPACK_GENERATOR "ZIP;TGZ;7Z")
-    set(CPACK_THREADS 0)
-    set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/build/package")
-
-    set(CPACK_PACKAGE_FILE_NAME "cmakekt-${PROJECT_VERSION}")
-
-    set(CPACK_PACKAGE_CHECKSUM SHA256)
-
-    include(CPack)
+    install(FILES CMakeKt.cmake DESTINATION ${CMAKE_INSTALL_DESTINATION} COMPONENT install)
 endif()
