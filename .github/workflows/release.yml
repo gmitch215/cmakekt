@@ -31,6 +31,8 @@ jobs:
         run: cmake . -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
       - name: Create Release Artifacts
         run: |
+          sudo cmake --build .
+          sudo cmake --build . --target klib
           sudo cmake --build . --target package
           sudo rm -rf build/package/_CPack_Packages
       - name: Generate Changelog
