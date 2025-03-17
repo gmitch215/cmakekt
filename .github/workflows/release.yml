@@ -37,7 +37,7 @@ jobs:
           fromTag: "${{ env.LATEST_TAG }}"
           toTag: "master"
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: cmakekt v${{ env.VERSION }}
