@@ -4,9 +4,11 @@ CMakeFiles
 cmake_install.cmake
 CTestTestfile.cmake
 Testing
-cmakekt-test-executable
+cmakekt-test*
 build/
 
+x64/
+Debug/
 _CPack_Packages/
 *.vcxproj*
 CPack*
@@ -17,6 +19,8 @@ install_manifest.txt
 *.dylib
 *.dll
 *.exe
-*.klib
+*.klib*
 *.def
 *.kexe
+*.sln
+pom.xml

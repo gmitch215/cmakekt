@@ -42,16 +42,21 @@ jobs:
       - name: Check Kotlin/Native Dependencies
         run: kotlinc-native .github/dependencies.kt
       - name: Configure Project
-        run: cmake .
+        run: cmake . -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
       - name: Build Project (Posix)
         if: ${{ matrix.os != 'windows-2022' }}
-        run: sudo cmake --build . --target install package
+        run: |
+          sudo cmake --build .
+          sudo cmake --build . --target klib
+          sudo cmake --build . --target install package
       - name: Build Project (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
-        run: cmake --build . --target install package
+        run: |
+          cmake --build .
+          cmake --build . --target klib
+          cmake --build . --target install package
       - name: Inspect klib Contents
         run: |
           cd test/build/cinterop
-          ls -la
           klib info CMakeKt.klib
-          klib dump-metadata CMakeKt.klib
+          klib dump-metadata CMakeKt.klib -print-signatures true

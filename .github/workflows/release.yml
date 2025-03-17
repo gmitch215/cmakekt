@@ -27,6 +27,8 @@ jobs:
       - name: Retrieve Latest Tag
         id: latest_tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: Configure Project
+        run: sudo cmake .
       - name: Create Release Artifacts
         run: |
           sudo cmake --build . --target package

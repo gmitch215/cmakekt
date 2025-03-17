@@ -3,6 +3,9 @@ if (NOT DEFINED PROJECT_NAME)
     message(FATAL_ERROR "PROJECT_NAME must be defined")
 endif()
 
+# Normalize install Paths
+cmake_policy(SET CMP0177 NEW)
+
 # Define Variables
 
 ## KN_CURRENT_ARCHITECTURE
@@ -31,7 +34,7 @@ set(KN_CURRENT_TARGET "${KN_CURRENT_OS}_${KN_CURRENT_ARCHITECTURE}")
 ## KN_DEFINITION_HEADERS
 if (NOT DEFINED KN_DEFINITION_HEADERS)
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include")
-        file(GLOB_RECURSE KN_DEFINITION_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include" "include/*.h")
+        file(GLOB_RECURSE KN_DEFINITION_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
         string(REPLACE ";" " " KN_DEFINITION_HEADERS "${KN_DEFINITION_HEADERS}")
     else()
         set(KN_DEFINITION_HEADERS "")
@@ -65,6 +68,10 @@ if (NOT DEFINED KN_DEFINITION_COMPILEROPTS)
 
     set(KN_DEFINITION_COMPILEROPTS "${KN_DEFINITION_COMPILEROPTS} -I${CMAKE_CURRENT_SOURCE_DIR}/include")
     string(STRIP "${KN_DEFINITION_COMPILEROPTS}" KN_DEFINITION_COMPILEROPTS)
+
+    # Ensure compatible with CLang
+    string(REPLACE "/D" "-D" KN_DEFINITION_COMPILEROPTS "${KN_DEFINITION_COMPILEROPTS}")
+    string(REPLACE "/I" "-I" KN_DEFINITION_COMPILEROPTS "${KN_DEFINITION_COMPILEROPTS}")
 endif()
 
 ## KN_DEFINITION_LINKEROPTS
@@ -79,26 +86,44 @@ if (NOT DEFINED KN_DEFINITION_LINKEROPTS)
 
     set(KN_DEFINITION_LINKEROPTS "${KN_DEFINITION_LINKEROPTS} -L${CMAKE_CURRENT_BINARY_DIR}")
     string(STRIP "${KN_DEFINITION_LINKEROPTS}" KN_DEFINITION_LINKEROPTS)
+
+    # Ensure compatible with CLang
+    string(REPLACE "/D" "-D" KN_DEFINITION_LINKEROPTS "${KN_DEFINITION_LINKEROPTS}")
+    string(REPLACE "/I" "-I" KN_DEFINITION_LINKEROPTS "${KN_DEFINITION_LINKEROPTS}")
 endif()
 
 ## KN_DEFINITION_LIBRARY_PATHS
 if (NOT DEFINED KN_DEFINITION_LIBRARY_PATHS)
     set(KN_DEFINITION_LIBRARY_PATHS "${CMAKE_CURRENT_BINARY_DIR}")
 
-    if (DEFINED RUNTIME_OUTPUT_DIRECTORY)
-        set(KN_DEFINITION_LIBRARY_PATHS "${KN_DEFINITION_LIBRARY_PATHS} ${RUNTIME_OUTPUT_DIRECTORY}")
+    if (DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(KN_DEFINITION_LIBRARY_PATHS "${KN_DEFINITION_LIBRARY_PATHS} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+    endif()
+
+    if (DEFINED CMAKE_CONFIGURATION_TYPES)
+        foreach(CONFIGURATION_TYPE IN ITEMS ${CMAKE_CONFIGURATION_TYPES})
+            set(KN_DEFINITION_LIBRARY_PATHS "${KN_DEFINITION_LIBRARY_PATHS} ${CMAKE_CURRENT_BINARY_DIR}/${CONFIGURATION_TYPE}")
+        endforeach()
     endif()
 endif()
 
 ## KN_DEFINITION_LIBRARIES
 if (NOT DEFINED KN_DEFINITION_LIBRARIES)
-    file(GLOB KN_DEFINITION_LIBRARIES RELATIVE "${CMAKE_CURRENT_BINARY_DIR}"
-        "${CMAKE_CURRENT_BINARY_DIR}/*.a" 
-        "${CMAKE_CURRENT_BINARY_DIR}/*.dylib" 
-        "${CMAKE_CURRENT_BINARY_DIR}/*.so" 
-        "${CMAKE_CURRENT_BINARY_DIR}/*.dll"
-        "${CMAKE_CURRENT_BINARY_DIR}/*.lib"
-    )
+    set(KN_DEFINITION_LIBRARIES "")
+    string(REPLACE " " ";" KN_DEFINITION_LIBRARY_PATHS_LIST "${KN_DEFINITION_LIBRARY_PATHS}")
+
+    foreach(LIBRARY_PATH IN ITEMS ${KN_DEFINITION_LIBRARY_PATHS_LIST})
+        file(GLOB KN_DEFINITION_LIBRARIES_RELATIVE RELATIVE "${LIBRARY_PATH}"
+            "${LIBRARY_PATH}/*.a" 
+            "${LIBRARY_PATH}/*.dylib" 
+            "${LIBRARY_PATH}/*.so" 
+            "${LIBRARY_PATH}/*.lib"
+        )
+
+        list(APPEND KN_DEFINITION_LIBRARIES ${KN_DEFINITION_LIBRARIES_RELATIVE})
+    endforeach()
+    list(REMOVE_DUPLICATES KN_DEFINITION_LIBRARIES)
+
     string(REPLACE ";" " " KN_DEFINITION_LIBRARIES "${KN_DEFINITION_LIBRARIES}")
 endif()
 
@@ -112,15 +137,29 @@ if (NOT DEFINED KN_CINTEROP_EXTRA_OPTS)
     set(KN_CINTEROP_EXTRA_OPTS "")
 endif()
 
-## KN_DEFINITION_FILE_OUTPUT
-if (NOT DEFINED KN_DEFINITION_FILE_OUTPUT)
-    set(KN_DEFINITION_FILE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/build/cinterop/${PROJECT_NAME}.def")
+## KN_CINTEROP_FOLDER
+if (NOT DEFINED KN_CINTEROP_FOLDER)
+    set(KN_CINTEROP_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/build/cinterop")
 endif()
 
-## KN_CINTEROP_FILE_OUTPUT
-if (NOT DEFINED KN_CINTEROP_FILE_OUTPUT)
-    set(KN_CINTEROP_FILE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/build/cinterop/${PROJECT_NAME}.klib")
+## KN_PROJECT_VERSION
+if (NOT DEFINED KN_PROJECT_VERSION)
+    set(KN_PROJECT_VERSION "${PROJECT_VERSION}")
 endif()
+
+## KN_DEFINITION_FILE_NAME
+if (NOT DEFINED KN_DEFINITION_FILE_NAME)
+    set(KN_DEFINITION_FILE_NAME "${PROJECT_NAME}-${KN_PROJECT_VERSION}.def")
+endif()
+
+set(KN_DEFINITION_FILE_OUTPUT "${KN_CINTEROP_FOLDER}/${KN_DEFINITION_FILE_NAME}")
+
+## KN_CINTEROP_FILE_NAME
+if (NOT DEFINED KN_CINTEROP_FILE_NAME)
+    set(KN_CINTEROP_FILE_NAME "${PROJECT_NAME}-${KN_PROJECT_VERSION}.klib")
+endif()
+
+set(KN_CINTEROP_FILE_OUTPUT "${KN_CINTEROP_FOLDER}/${KN_CINTEROP_FILE_NAME}")
 
 ## KN_INSTALL_GROUPID
 if (NOT DEFINED KN_INSTALL_GROUPID)
@@ -203,7 +242,7 @@ else()
 endif()
 
 add_custom_target(
-    klib ALL
+    klib
     COMMAND ${KN_CINTEROP_COMMAND} 
         -def ${KN_DEFINITION_FILE_OUTPUT} 
         -o ${KN_CINTEROP_FILE_OUTPUT} 
@@ -218,7 +257,30 @@ add_custom_target(
 if (DEFINED ENV{M2_HOME})
     set(MAVEN_LOCAL "$ENV{M2_HOME}/repository")
 else()
-    set(MAVEN_LOCAL "$ENV{HOME}/.m2/repository")
+    # read if custom maven local repository is set
+    find_file(MAVEN_SETTINGS
+        NAMES settings.xml
+        PATHS "$ENV{HOME}/.m2" "$ENV{USERPROFILE}/.m2"
+        NO_DEFAULT_PATH
+    )
+
+    if(MAVEN_SETTINGS)
+        file(READ "${MAVEN_SETTINGS}" MAVEN_SETTINGS_CONTENT)
+        string(REGEX MATCH "<localRepository>([^<]+)</localRepository>" _ "${MAVEN_SETTINGS_CONTENT}")
+    
+        if(CMAKE_MATCH_1)
+            set(MAVEN_LOCAL "${CMAKE_MATCH_1}")
+        endif()
+    endif()
+
+    # otherwise, use default maven local repository
+    if (NOT DEFINED MAVEN_LOCAL)
+        if(WIN32)
+            set(MAVEN_LOCAL "$ENV{USERPROFILE}/.m2/repository")
+        else()
+            set(MAVEN_LOCAL "$ENV{HOME}/.m2/repository")
+        endif()
+    endif()
 endif()
 
 if (NOT EXISTS "${MAVEN_LOCAL}")
@@ -231,38 +293,38 @@ else()
     set(MAVEN_COMMAND "mvn")
 endif()
 
-add_custom_target(
-    "install-maven-local"
-    COMMAND ${MAVEN_COMMAND} install:install-file 
-        -Dfile=${KN_CINTEROP_FILE_OUTPUT} 
-        -Ddescription=${PROJECT_DESCRIPTION}
-        -DgroupId=${KN_INSTALL_GROUPID} 
-        -DartifactId=${KN_INSTALL_ARTIFACTID} 
-        -Dversion=${PROJECT_VERSION} 
-        -Dpackaging=klib 
-        -DlocalRepositoryPath=${MAVEN_LOCAL}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS klib
-    COMMENT "Installing Kotlin/Native bindings to Maven Local"
-    VERBATIM
-)
-install(CODE "
-    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target install-maven-local)
-")
+string(REPLACE "." "/" KN_INSTALL_GROUPID_PATH "${KN_INSTALL_GROUPID}")
+set(KN_MAVEN_INSTALL_PATH "${MAVEN_LOCAL}/${KN_INSTALL_GROUPID_PATH}/${KN_INSTALL_ARTIFACTID}/${KN_PROJECT_VERSION}")
+install(FILES "${KN_CINTEROP_FILE_OUTPUT}" DESTINATION "${KN_MAVEN_INSTALL_PATH}" RENAME "${KN_INSTALL_ARTIFACTID}-${KN_PROJECT_VERSION}.klib")
+
+set(KN_MAVEN_POM_FILE_PATH "${KN_CINTEROP_FOLDER}/pom.xml")
+set(KN_MAVEN_POM_FILE_CONTENT "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">
+    <!-- Generated by CMakeKt -->
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>${KN_INSTALL_GROUPID}</groupId>
+    <artifactId>${KN_INSTALL_ARTIFACTID}</artifactId>
+    <version>${KN_PROJECT_VERSION}</version>
+    <name>${PROJECT_NAME}</name>
+    <description>${PROJECT_DESCRIPTION}</description>
+    <url>${PROJECT_HOMEPAGE_URL}</url>
+</project>")
+file(WRITE "${KN_MAVEN_POM_FILE_PATH}" "${KN_MAVEN_POM_FILE_CONTENT}")
+set(KN_MAVEN_POM_FILE "${KN_MAVEN_INSTALL_PATH}/${KN_INSTALL_ARTIFACTID}-${KN_PROJECT_VERSION}.pom")
+install(FILES "${KN_MAVEN_POM_FILE_PATH}" DESTINATION "${KN_MAVEN_INSTALL_PATH}" RENAME "${KN_INSTALL_ARTIFACTID}-${KN_PROJECT_VERSION}.pom")
 
 # deploy (maven remote)
 if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
     add_custom_target(
         deploy-maven
-        COMMAND ${MAVEN_COMMAND} deploy:deploy-file 
+        COMMAND ${MAVEN_COMMAND} deploy:deploy-file
+            -Dfile=${KN_CINTEROP_FILE_NAME}
+            -DpomFile=pom.xml
             -Durl=${MAVEN_REMOTE_URL}
             -DrepositoryId=${MAVEN_REMOTE_ID}
-            -DgroupId=${KN_INSTALL_GROUPID} 
-            -DartifactId=${KN_INSTALL_ARTIFACTID} 
-            -Dversion=${PROJECT_VERSION} 
             -Dpackaging=klib 
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS klib
+        WORKING_DIRECTORY ${KN_CINTEROP_FOLDER}
+        DEPENDS klib generate-maven-pom
         COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
         VERBATIM
     )
