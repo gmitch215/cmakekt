@@ -326,7 +326,7 @@ if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
             -DrepositoryId=${MAVEN_REMOTE_ID}
             -Dpackaging=klib 
         WORKING_DIRECTORY ${KN_CINTEROP_FOLDER}
-        DEPENDS klib generate-maven-pom
+        DEPENDS klib
         COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
         VERBATIM
     )
