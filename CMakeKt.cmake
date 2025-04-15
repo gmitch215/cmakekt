@@ -244,7 +244,7 @@ else()
 endif()
 
 add_custom_target(
-    klib
+    klib ALL
     COMMAND ${KN_CINTEROP_COMMAND} 
         -def ${KN_DEFINITION_FILE_OUTPUT} 
         -o ${KN_CINTEROP_FILE_OUTPUT} 
