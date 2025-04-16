@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "1.0.0")
+set(PROJECT_VERSION "1.0.1")
 project(CMakeKt
     VERSION ${PROJECT_VERSION}
     DESCRIPTION "A CMake plugin for generating Kotlin/Native bindings"
