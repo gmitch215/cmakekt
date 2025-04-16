@@ -243,17 +243,31 @@ else()
     set(KN_CINTEROP_COMMAND "cinterop")
 endif()
 
-add_custom_target(
-    klib ALL
-    COMMAND ${KN_CINTEROP_COMMAND} 
-        -def ${KN_DEFINITION_FILE_OUTPUT} 
-        -o ${KN_CINTEROP_FILE_OUTPUT} 
-        ${KN_CINTEROP_EXTRA_OPTS}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    BYPRODUCTS ${KN_DEFINITION_FILE_OUTPUT} ${KN_CINTEROP_FILE_OUTPUT}
-    COMMENT "Generating Kotlin/Native bindings"
-    VERBATIM
-)
+if (WIN32)
+    add_custom_target(
+        klib
+        COMMAND ${KN_CINTEROP_COMMAND} 
+            -def ${KN_DEFINITION_FILE_OUTPUT} 
+            -o ${KN_CINTEROP_FILE_OUTPUT} 
+            ${KN_CINTEROP_EXTRA_OPTS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        BYPRODUCTS ${KN_DEFINITION_FILE_OUTPUT} ${KN_CINTEROP_FILE_OUTPUT}
+        COMMENT "Generating Kotlin/Native bindings"
+        VERBATIM
+    )
+else()
+    add_custom_target(
+        klib ALL
+        COMMAND ${KN_CINTEROP_COMMAND} 
+            -def ${KN_DEFINITION_FILE_OUTPUT} 
+            -o ${KN_CINTEROP_FILE_OUTPUT} 
+            ${KN_CINTEROP_EXTRA_OPTS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        BYPRODUCTS ${KN_DEFINITION_FILE_OUTPUT} ${KN_CINTEROP_FILE_OUTPUT}
+        COMMENT "Generating Kotlin/Native bindings"
+        VERBATIM
+    )
+endif()
 
 # install (maven local)
 if (DEFINED ENV{M2_HOME})
