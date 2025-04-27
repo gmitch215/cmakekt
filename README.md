@@ -29,9 +29,10 @@ Simply include the `CMakeKt.cmake` file in your CMake project and call the `incl
 
 ```cmake
 include(CMakeKt)
+add_klib_binary(my_target)
 ```
 
-The plugin will create a `klib` target that is enabled by default. It will create a `.klib` file in `build/cinterop/` that you can include in your Kotlin project.
+The plugin will now generate a Kotlin/Native library from your C project. The generated library will be located in the `cinterop` directory of your project relative to your binary directory.
 
 You can learn how to configure the plugin using the documentation [here](https://docs.gmitch215.dev/cmakekt/).
 
@@ -52,7 +53,6 @@ If you are prepending `sudo` to the cmake command, you need to create a symantic
 ```bash
 sudo ln -s $KOTLIN_NATIVE_HOME/bin/cinterop /usr/local/bin/cinterop
 sudo ln -s $KOTLIN_NATIVE_HOME/bin/run_konan /usr/local/bin/run_konan
-sudo ln -s $KOTLIN_NATIVE_HOME/bin/kotlinc-native /usr/local/bin/kotlinc-native
 ```
 
 ### `Operation not permitted`
@@ -60,7 +60,8 @@ sudo ln -s $KOTLIN_NATIVE_HOME/bin/kotlinc-native /usr/local/bin/kotlinc-native
 Prepend `sudo` to the cmake command.
 
 ```bash
-sudo cmake --build .
+sudo cmake -S . -B build
+sudo cmake --build build
 ```
 
 ## License
