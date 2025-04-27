@@ -8,6 +8,11 @@ if (CMAKE_MINOR_VERSION GREATER_EQUAL 31)
     cmake_policy(SET CMP0177 NEW)
 endif()
 
+# Prevent MSVC Compiler
+if (WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    message(FATAL_ERROR "Kotlin/Native does not support MSVC compiler. Please use MinGW with the \"MinGW Makefiles\" CMake generator.")
+endif()
+
 # Define Variables
 
 ## KN_CURRENT_ARCHITECTURE
@@ -70,10 +75,6 @@ if (NOT DEFINED KN_DEFINITION_COMPILEROPTS)
 
     set(KN_DEFINITION_COMPILEROPTS "${KN_DEFINITION_COMPILEROPTS} -I${CMAKE_CURRENT_SOURCE_DIR}/include")
     string(STRIP "${KN_DEFINITION_COMPILEROPTS}" KN_DEFINITION_COMPILEROPTS)
-
-    # Ensure compatible with CLang
-    string(REPLACE "/D" "-D" KN_DEFINITION_COMPILEROPTS "${KN_DEFINITION_COMPILEROPTS}")
-    string(REPLACE "/I" "-I" KN_DEFINITION_COMPILEROPTS "${KN_DEFINITION_COMPILEROPTS}")
 endif()
 
 ## KN_DEFINITION_LINKEROPTS
@@ -88,10 +89,6 @@ if (NOT DEFINED KN_DEFINITION_LINKEROPTS)
 
     set(KN_DEFINITION_LINKEROPTS "${KN_DEFINITION_LINKEROPTS} -L${CMAKE_CURRENT_BINARY_DIR}")
     string(STRIP "${KN_DEFINITION_LINKEROPTS}" KN_DEFINITION_LINKEROPTS)
-
-    # Ensure compatible with CLang
-    string(REPLACE "/D" "-D" KN_DEFINITION_LINKEROPTS "${KN_DEFINITION_LINKEROPTS}")
-    string(REPLACE "/I" "-I" KN_DEFINITION_LINKEROPTS "${KN_DEFINITION_LINKEROPTS}")
 endif()
 
 ## KN_DEFINITION_LIBRARY_PATHS
@@ -115,12 +112,7 @@ if (NOT DEFINED KN_DEFINITION_LIBRARIES)
     string(REPLACE " " ";" KN_DEFINITION_LIBRARY_PATHS_LIST "${KN_DEFINITION_LIBRARY_PATHS}")
 
     foreach(LIBRARY_PATH IN ITEMS ${KN_DEFINITION_LIBRARY_PATHS_LIST})
-        file(GLOB KN_DEFINITION_LIBRARIES_RELATIVE RELATIVE "${LIBRARY_PATH}"
-            "${LIBRARY_PATH}/*.a" 
-            "${LIBRARY_PATH}/*.dylib" 
-            "${LIBRARY_PATH}/*.so" 
-            "${LIBRARY_PATH}/*.lib"
-        )
+        file(GLOB KN_DEFINITION_LIBRARIES_RELATIVE RELATIVE "${LIBRARY_PATH}" "${LIBRARY_PATH}/*.a")
 
         list(APPEND KN_DEFINITION_LIBRARIES ${KN_DEFINITION_LIBRARIES_RELATIVE})
     endforeach()
@@ -141,7 +133,7 @@ endif()
 
 ## KN_CINTEROP_FOLDER
 if (NOT DEFINED KN_CINTEROP_FOLDER)
-    set(KN_CINTEROP_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/build/cinterop")
+    set(KN_CINTEROP_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/cinterop")
 endif()
 
 ## KN_PROJECT_VERSION
@@ -243,9 +235,9 @@ else()
     set(KN_CINTEROP_COMMAND "cinterop")
 endif()
 
-if (WIN32)
-    add_custom_target(
-        klib
+function(add_klib_binary target)
+    add_custom_command(TARGET ${target}
+        POST_BUILD
         COMMAND ${KN_CINTEROP_COMMAND} 
             -def ${KN_DEFINITION_FILE_OUTPUT} 
             -o ${KN_CINTEROP_FILE_OUTPUT} 
@@ -255,19 +247,13 @@ if (WIN32)
         COMMENT "Generating Kotlin/Native bindings"
         VERBATIM
     )
-else()
-    add_custom_target(
-        klib ALL
-        COMMAND ${KN_CINTEROP_COMMAND} 
-            -def ${KN_DEFINITION_FILE_OUTPUT} 
-            -o ${KN_CINTEROP_FILE_OUTPUT} 
-            ${KN_CINTEROP_EXTRA_OPTS}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        BYPRODUCTS ${KN_DEFINITION_FILE_OUTPUT} ${KN_CINTEROP_FILE_OUTPUT}
-        COMMENT "Generating Kotlin/Native bindings"
-        VERBATIM
-    )
-endif()
+endfunction()
+
+function(add_klib_binaries targets)
+    foreach(target IN LISTS targets)
+        add_klib_binary(${target})
+    endforeach()
+endfunction()
 
 # install (maven local)
 if (DEFINED ENV{M2_HOME})
@@ -338,18 +324,17 @@ if (KN_INSTALL_${PROJECT_NAME})
 endif()
 
 # deploy (maven remote)
-if (DEFINED MAVEN_REMOTE_URL AND DEFINED MAVEN_REMOTE_ID)
-    add_custom_target(
-        deploy-maven
+function(add_maven_deployment target remote id)
+    add_custom_command(TARGET ${target} 
+        POST_BUILD
         COMMAND ${MAVEN_COMMAND} deploy:deploy-file
             -Dfile=${KN_CINTEROP_FILE_NAME}
             -DpomFile=pom.xml
-            -Durl=${MAVEN_REMOTE_URL}
-            -DrepositoryId=${MAVEN_REMOTE_ID}
+            -Durl=${remote}
+            -DrepositoryId=${id}
             -Dpackaging=klib 
         WORKING_DIRECTORY ${KN_CINTEROP_FOLDER}
-        DEPENDS klib
         COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
         VERBATIM
     )
-endif()
+endfunction()
