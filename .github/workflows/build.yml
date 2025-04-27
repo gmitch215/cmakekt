@@ -48,7 +48,7 @@ jobs:
         if: ${{ matrix.os == 'windows-2025' }}
         run: cmake -B build -G "MinGW Makefiles" -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
       - name: Build Project
-        run: cmake --build build
+        run: cmake --build build --target install
       - name: Inspect klib Contents
         run: |
           cd test/cinterop
