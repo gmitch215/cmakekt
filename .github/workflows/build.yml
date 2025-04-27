@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: 
           - ubuntu-24.04
-          - windows-2022
+          - windows-2025
           - macos-13
           - macos-15
 
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: fwilhe2/setup-kotlin@main
         with:
-          version: '2.1.10'
+          version: '2.1.20'
           install-native: true
       - name: Setup Konan
         uses: actions/cache@v4
@@ -41,20 +41,15 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-konan
       - name: Check Kotlin/Native Dependencies
         run: kotlinc-native .github/dependencies.kt
-      - name: Configure Project
-        run: cmake . -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
-      - name: Build Project (Posix)
-        if: ${{ matrix.os != 'windows-2022' }}
-        run: |
-          sudo cmake --build .
-          sudo cmake --build . --target klib
-          sudo cmake --build . --target install
-      - name: Build Project (Windows)
-        if: ${{ matrix.os == 'windows-2022' }}
-        run: |
-          cmake --build .
-          cmake --build . --target klib
-          cmake --build . --target install
+      - name: Configure Project (Posix)
+        if: ${{ matrix.os != 'windows-2025' }}
+        run: cmake -B build -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
+      - name: Configure Project (Windows)
+        if: ${{ matrix.os == 'windows-2025' }}
+        run: cmake -B build -G "MinGW Makefiles" -DKN_CINTEROP_FILE_NAME="CMakeKt.klib"
+      - name: Build Project
+        run: sudo cmake --build build --target install
+        shell: bash
       - name: Inspect klib Contents
         run: |
           cd test/build/cinterop
