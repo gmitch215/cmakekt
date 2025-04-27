@@ -32,6 +32,20 @@ include(CMakeKt)
 add_klib_binary(my_target)
 ```
 
+You can do this by using a [Git Submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules), copying the `CMakeKt.cmake` file into your project, or using FetchContent:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+    cmakekt
+    GIT_REPOSITORY https://github.com/gmitch215/cmakekt.git
+    GIT_TAG        master
+)
+FetchContent_MakeAvailable(cmakekt)
+include(CMakeKt)
+add_klib_binary(my_target)
+```
+
 The plugin will now generate a Kotlin/Native library from your C project. The generated library will be located in the `cinterop` directory of your project relative to your binary directory.
 
 You can learn how to configure the plugin using the documentation [here](https://docs.gmitch215.dev/cmakekt/).
