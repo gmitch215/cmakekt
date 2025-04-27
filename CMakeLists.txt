@@ -8,5 +8,9 @@ project(CMakeKt
 )
 
 # Testing
-add_subdirectory(test)
-enable_testing()
+option(TEST_CMAKEKT "Enable CMakeKt tests" OFF)
+
+if (TEST_CMAKEKT)
+    add_subdirectory(test)
+    enable_testing()
+endif()
