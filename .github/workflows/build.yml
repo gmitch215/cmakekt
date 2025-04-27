@@ -52,6 +52,6 @@ jobs:
         shell: bash
       - name: Inspect klib Contents
         run: |
-          cd test/build/cinterop
+          cd test/cinterop
           klib info CMakeKt.klib
           klib dump-metadata CMakeKt.klib -print-signatures true
