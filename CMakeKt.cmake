@@ -307,7 +307,7 @@ function(add_maven_deployment target remote id)
     add_custom_command(TARGET ${target} 
         POST_BUILD
         COMMAND ${MAVEN_COMMAND} deploy:deploy-file
-            -Dfile=${KN_CINTEROP_FILE_NAME}
+            -Dfile=${target}.klib
             -DpomFile=pom.xml
             -Durl=${remote}
             -DrepositoryId=${id}

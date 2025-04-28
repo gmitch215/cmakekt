@@ -43,14 +43,16 @@ jobs:
         run: kotlinc-native .github/dependencies.kt
       - name: Configure Project (Posix)
         if: ${{ matrix.os != 'windows-2025' }}
-        run: cmake -B build -DKN_CINTEROP_FILE_NAME="CMakeKt.klib" -DTEST_CMAKEKT=ON
+        run: cmake -B build -DTEST_CMAKEKT=ON
       - name: Configure Project (Windows)
         if: ${{ matrix.os == 'windows-2025' }}
-        run: cmake -B build -G "MinGW Makefiles" -DKN_CINTEROP_FILE_NAME="CMakeKt.klib" -DTEST_CMAKEKT=ON
+        run: cmake -B build -G "MinGW Makefiles" -DTEST_CMAKEKT=ON
       - name: Build Project
         run: cmake --build build --target install
       - name: Inspect klib Contents
         run: |
           cd build/test/cinterop
-          klib info CMakeKt.klib
-          klib dump-metadata CMakeKt.klib -print-signatures true
+          klib info cmakekt-test-executable-1.klib
+          klib dump-metadata cmakekt-test-executable-1.klib -print-signatures true
+          klib info cmakekt-test-executable-2.klib
+          klib dump-metadata cmakekt-test-executable-2.klib -print-signatures true
