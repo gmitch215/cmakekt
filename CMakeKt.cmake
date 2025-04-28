@@ -269,7 +269,7 @@ function(add_klib_binary target)
             ${KN_CINTEROP_EXTRA_OPTS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         BYPRODUCTS ${KN_DEFINITION_FILE_OUTPUT} ${KN_CINTEROP_FILE_OUTPUT}
-        COMMENT "Generating Kotlin/Native bindings"
+        COMMENT "Generating Kotlin/Native bindings ${target}.klib"
         VERBATIM
     )
 
@@ -313,7 +313,7 @@ function(add_maven_deployment target remote id)
             -DrepositoryId=${id}
             -Dpackaging=klib 
         WORKING_DIRECTORY ${KN_CINTEROP_FOLDER}
-        COMMENT "Deploying Kotlin/Native bindings to Maven Repository"
+        COMMENT "Deploying ${target}.klib to Maven Repository"
         VERBATIM
     )
 endfunction()
